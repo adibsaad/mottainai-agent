@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -20,7 +21,7 @@ import (
 	"github.com/go-redis/redis"
 )
 
-// Broker represents a Redis broker
+// BrokerGR represents a Redis broker
 type BrokerGR struct {
 	common.Broker
 	rclient      redis.UniversalClient
@@ -33,14 +34,14 @@ type BrokerGR struct {
 	redisOnce  sync.Once
 }
 
-// New creates new Broker instance
+// NewGR creates new Broker instance
 func NewGR(cnf *config.Config, addrs []string, db int) iface.Broker {
 	b := &BrokerGR{Broker: common.NewBroker(cnf)}
 
 	var password string
 	parts := strings.Split(addrs[0], "@")
 	if len(parts) == 2 {
-		// with passwrod
+		// with password
 		password = parts[0]
 		addrs[0] = parts[1]
 	}
@@ -50,6 +51,10 @@ func NewGR(cnf *config.Config, addrs []string, db int) iface.Broker {
 		DB:       db,
 		Password: password,
 	}
+	if cnf.Redis != nil {
+		ropt.MasterName = cnf.Redis.MasterName
+	}
+
 	b.rclient = redis.NewUniversalClient(ropt)
 	if cnf.Redis.DelayedTasksKey != "" {
 		redisDelayedTasksKey = cnf.Redis.DelayedTasksKey
@@ -63,7 +68,7 @@ func (b *BrokerGR) StartConsuming(consumerTag string, concurrency int, taskProce
 	defer b.consumingWG.Done()
 
 	if concurrency < 1 {
-		concurrency = 1
+		concurrency = runtime.NumCPU() * 2
 	}
 
 	b.Broker.StartConsuming(consumerTag, concurrency, taskProcessor)
@@ -138,7 +143,7 @@ func (b *BrokerGR) StartConsuming(consumerTag string, concurrency int, taskProce
 				decoder := json.NewDecoder(bytes.NewReader(task))
 				decoder.UseNumber()
 				if err := decoder.Decode(signature); err != nil {
-					log.ERROR.Print(errs.NewErrCouldNotUnmarshaTaskSignature(task, err))
+					log.ERROR.Print(errs.NewErrCouldNotUnmarshalTaskSignature(task, err))
 				}
 
 				if err := b.Publish(context.Background(), signature); err != nil {
@@ -291,13 +296,13 @@ func (b *BrokerGR) consumeOne(delivery []byte, taskProcessor iface.TaskProcessor
 	decoder := json.NewDecoder(bytes.NewReader(delivery))
 	decoder.UseNumber()
 	if err := decoder.Decode(signature); err != nil {
-		return errs.NewErrCouldNotUnmarshaTaskSignature(delivery, err)
+		return errs.NewErrCouldNotUnmarshalTaskSignature(delivery, err)
 	}
 
 	// If the task is not registered, we requeue it,
 	// there might be different workers for processing specific tasks
 	if !b.IsTaskRegistered(signature.Name) {
-		log.INFO.Printf("Task not registered with this worker. Requeing message: %s", delivery)
+		log.INFO.Printf("Task not registered with this worker. Requeuing message: %s", delivery)
 
 		b.rclient.RPush(getQueueGR(b.GetConfig(), taskProcessor), delivery)
 		return nil
