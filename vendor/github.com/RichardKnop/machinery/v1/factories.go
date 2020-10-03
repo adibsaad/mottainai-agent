@@ -23,6 +23,7 @@ import (
 	backendiface "github.com/RichardKnop/machinery/v1/backends/iface"
 	memcachebackend "github.com/RichardKnop/machinery/v1/backends/memcache"
 	mongobackend "github.com/RichardKnop/machinery/v1/backends/mongo"
+	nullbackend "github.com/RichardKnop/machinery/v1/backends/null"
 	redisbackend "github.com/RichardKnop/machinery/v1/backends/redis"
 )
 
@@ -37,20 +38,30 @@ func BrokerFactory(cnf *config.Config) (brokeriface.Broker, error) {
 		return amqpbroker.New(cnf), nil
 	}
 
-	if strings.HasPrefix(cnf.Broker, "redis://") {
-		parts := strings.Split(cnf.Broker, "redis://")
+	if strings.HasPrefix(cnf.Broker, "redis://") || strings.HasPrefix(cnf.Broker, "rediss://") {
+		var scheme string
+		if strings.HasPrefix(cnf.Broker, "redis://") {
+			scheme = "redis://"
+		} else {
+			scheme = "rediss://"
+		}
+		parts := strings.Split(cnf.Broker, scheme)
 		if len(parts) != 2 {
 			return nil, fmt.Errorf(
-				"Redis broker connection string should be in format redis://host:port, instead got %s",
+				"Redis broker connection string should be in format %shost:port, instead got %s", scheme,
 				cnf.Broker,
 			)
 		}
-
-		redisHost, redisPassword, redisDB, err := ParseRedisURL(cnf.Broker)
-		if err != nil {
-			return nil, err
+		brokers := strings.Split(parts[1], ",")
+		if len(brokers) > 1 {
+			return redisbroker.NewGR(cnf, brokers, 0), nil
+		} else {
+			redisHost, redisPassword, redisDB, err := ParseRedisURL(cnf.Broker)
+			if err != nil {
+				return nil, err
+			}
+			return redisbroker.New(cnf, redisHost, redisPassword, "", redisDB), nil
 		}
-		return redisbroker.New(cnf, redisHost, redisPassword, "", redisDB), nil
 	}
 
 	if strings.HasPrefix(cnf.Broker, "redis+socket://") {
@@ -114,13 +125,26 @@ func BackendFactory(cnf *config.Config) (backendiface.Backend, error) {
 		return memcachebackend.New(cnf, servers), nil
 	}
 
-	if strings.HasPrefix(cnf.ResultBackend, "redis://") {
-		redisHost, redisPassword, redisDB, err := ParseRedisURL(cnf.ResultBackend)
-		if err != nil {
-			return nil, err
+	if strings.HasPrefix(cnf.ResultBackend, "redis://") || strings.HasPrefix(cnf.ResultBackend, "rediss://") {
+		var scheme string
+		if strings.HasPrefix(cnf.ResultBackend, "redis://") {
+			scheme = "redis://"
+		} else {
+			scheme = "rediss://"
 		}
+		parts := strings.Split(cnf.ResultBackend, scheme)
+		addrs := strings.Split(parts[1], ",")
+		if len(addrs) > 1 {
+			return redisbackend.NewGR(cnf, addrs, 0), nil
+		} else {
+			redisHost, redisPassword, redisDB, err := ParseRedisURL(cnf.ResultBackend)
 
-		return redisbackend.New(cnf, redisHost, redisPassword, "", redisDB), nil
+			if err != nil {
+				return nil, err
+			}
+
+			return redisbackend.New(cnf, redisHost, redisPassword, "", redisDB), nil
+		}
 	}
 
 	if strings.HasPrefix(cnf.ResultBackend, "redis+socket://") {
@@ -132,12 +156,17 @@ func BackendFactory(cnf *config.Config) (backendiface.Backend, error) {
 		return redisbackend.New(cnf, "", redisPassword, redisSocket, redisDB), nil
 	}
 
-	if strings.HasPrefix(cnf.ResultBackend, "mongodb://") {
-		return mongobackend.New(cnf), nil
+	if strings.HasPrefix(cnf.ResultBackend, "mongodb://") ||
+		strings.HasPrefix(cnf.ResultBackend, "mongodb+srv://") {
+		return mongobackend.New(cnf)
 	}
 
 	if strings.HasPrefix(cnf.ResultBackend, "eager") {
 		return eagerbackend.New(), nil
+	}
+
+	if strings.HasPrefix(cnf.ResultBackend, "null") {
+		return nullbackend.New(), nil
 	}
 
 	if strings.HasPrefix(cnf.ResultBackend, "https://dynamodb") {
@@ -156,7 +185,7 @@ func ParseRedisURL(url string) (host, password string, db int, err error) {
 	if err != nil {
 		return
 	}
-	if u.Scheme != "redis" {
+	if u.Scheme != "redis" && u.Scheme != "rediss" {
 		err = errors.New("No redis scheme found")
 		return
 	}
