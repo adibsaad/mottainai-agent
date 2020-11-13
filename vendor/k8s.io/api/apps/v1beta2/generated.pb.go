@@ -58,21 +58,27 @@ limitations under the License.
 */
 package v1beta2
 
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
+import (
+	fmt "fmt"
 
-import k8s_io_api_core_v1 "k8s.io/api/core/v1"
-import k8s_io_apimachinery_pkg_apis_meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	proto "github.com/gogo/protobuf/proto"
 
-import k8s_io_apimachinery_pkg_util_intstr "k8s.io/apimachinery/pkg/util/intstr"
+	math "math"
 
-import github_com_gogo_protobuf_sortkeys "github.com/gogo/protobuf/sortkeys"
+	k8s_io_api_core_v1 "k8s.io/api/core/v1"
 
-import strings "strings"
-import reflect "reflect"
+	k8s_io_apimachinery_pkg_apis_meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-import io "io"
+	k8s_io_apimachinery_pkg_util_intstr "k8s.io/apimachinery/pkg/util/intstr"
+
+	github_com_gogo_protobuf_sortkeys "github.com/gogo/protobuf/sortkeys"
+
+	strings "strings"
+
+	reflect "reflect"
+
+	io "io"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -113,9 +119,11 @@ func (m *DaemonSetStatus) Reset()                    { *m = DaemonSetStatus{} }
 func (*DaemonSetStatus) ProtoMessage()               {}
 func (*DaemonSetStatus) Descriptor() ([]byte, []int) { return fileDescriptorGenerated, []int{6} }
 
-func (m *DaemonSetUpdateStrategy) Reset()                    { *m = DaemonSetUpdateStrategy{} }
-func (*DaemonSetUpdateStrategy) ProtoMessage()               {}
-func (*DaemonSetUpdateStrategy) Descriptor() ([]byte, []int) { return fileDescriptorGenerated, []int{7} }
+func (m *DaemonSetUpdateStrategy) Reset()      { *m = DaemonSetUpdateStrategy{} }
+func (*DaemonSetUpdateStrategy) ProtoMessage() {}
+func (*DaemonSetUpdateStrategy) Descriptor() ([]byte, []int) {
+	return fileDescriptorGenerated, []int{7}
+}
 
 func (m *Deployment) Reset()                    { *m = Deployment{} }
 func (*Deployment) ProtoMessage()               {}
@@ -161,9 +169,11 @@ func (m *ReplicaSetStatus) Reset()                    { *m = ReplicaSetStatus{} 
 func (*ReplicaSetStatus) ProtoMessage()               {}
 func (*ReplicaSetStatus) Descriptor() ([]byte, []int) { return fileDescriptorGenerated, []int{18} }
 
-func (m *RollingUpdateDaemonSet) Reset()                    { *m = RollingUpdateDaemonSet{} }
-func (*RollingUpdateDaemonSet) ProtoMessage()               {}
-func (*RollingUpdateDaemonSet) Descriptor() ([]byte, []int) { return fileDescriptorGenerated, []int{19} }
+func (m *RollingUpdateDaemonSet) Reset()      { *m = RollingUpdateDaemonSet{} }
+func (*RollingUpdateDaemonSet) ProtoMessage() {}
+func (*RollingUpdateDaemonSet) Descriptor() ([]byte, []int) {
+	return fileDescriptorGenerated, []int{19}
+}
 
 func (m *RollingUpdateDeployment) Reset()      { *m = RollingUpdateDeployment{} }
 func (*RollingUpdateDeployment) ProtoMessage() {}

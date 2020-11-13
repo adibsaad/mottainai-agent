@@ -41,16 +41,21 @@ limitations under the License.
 */
 package v1
 
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
+import (
+	fmt "fmt"
 
-import github_com_gogo_protobuf_sortkeys "github.com/gogo/protobuf/sortkeys"
+	proto "github.com/gogo/protobuf/proto"
 
-import strings "strings"
-import reflect "reflect"
+	math "math"
 
-import io "io"
+	github_com_gogo_protobuf_sortkeys "github.com/gogo/protobuf/sortkeys"
+
+	strings "strings"
+
+	reflect "reflect"
+
+	io "io"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -89,9 +94,11 @@ func (m *ResourceRule) Reset()                    { *m = ResourceRule{} }
 func (*ResourceRule) ProtoMessage()               {}
 func (*ResourceRule) Descriptor() ([]byte, []int) { return fileDescriptorGenerated, []int{5} }
 
-func (m *SelfSubjectAccessReview) Reset()                    { *m = SelfSubjectAccessReview{} }
-func (*SelfSubjectAccessReview) ProtoMessage()               {}
-func (*SelfSubjectAccessReview) Descriptor() ([]byte, []int) { return fileDescriptorGenerated, []int{6} }
+func (m *SelfSubjectAccessReview) Reset()      { *m = SelfSubjectAccessReview{} }
+func (*SelfSubjectAccessReview) ProtoMessage() {}
+func (*SelfSubjectAccessReview) Descriptor() ([]byte, []int) {
+	return fileDescriptorGenerated, []int{6}
+}
 
 func (m *SelfSubjectAccessReviewSpec) Reset()      { *m = SelfSubjectAccessReviewSpec{} }
 func (*SelfSubjectAccessReviewSpec) ProtoMessage() {}
